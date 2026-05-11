@@ -101,7 +101,7 @@ function switchTab(n) {
   document.getElementById(`tab-btn-${n}`).classList.add("active");
 }
 
-window.addEventListener("DOMContentLoaded",()=>{ buildDefaultRows(1); buildDefaultRows(2); runAnalysis(1); loadGestureData(); });
+window.addEventListener("DOMContentLoaded",()=>{ buildDefaultRows(1); buildDefaultRows(2); loadGestureData(); });
 
 // ── Analysis fetch ───────────────────────────────────────────────────────────
 
