@@ -154,8 +154,12 @@
 
   <!-- ══ GESTURE ANALYSIS ══ -->
   <div id="gesture-panel" style="margin-top:40px;padding-bottom:48px">
-    <div class="section-label">// Gesture Analysis — Arm Velocity per Second</div>
-    <div class="chart-card" style="margin-top:12px">
+    <div class="section-label">// Gesture Analysis — Cross-Segment Comparison</div>
+    <div class="gesture-global-controls">
+      <span class="gesture-global-label">Metric:</span>
+      <div id="gesture-global-chips" class="gesture-metric-chips"></div>
+    </div>
+    <div class="chart-card" style="margin-top:0">
       <canvas id="chart-gesture" height="80"></canvas>
     </div>
     <div id="gesture-status" style="color:#6b6a5e;font-size:12px;margin-top:8px;font-family:'DM Mono',monospace">

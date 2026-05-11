@@ -222,3 +222,50 @@ tr:hover td { background:var(--surface2); }
   color: var(--muted); font-size: 0.9rem;
   transition: transform 0.2s; margin-left: 8px;
 }
+
+/* ── Gesture metric toggle chips ── */
+.gesture-metric-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.gesture-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.6;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.gesture-chip:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+.gesture-chip.active {
+  color: #000;
+}
+
+/* ── Global gesture metric selector row ── */
+.gesture-global-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.gesture-global-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  padding-top: 5px;
+  white-space: nowrap;
+}

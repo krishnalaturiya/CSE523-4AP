@@ -6,7 +6,44 @@ const charts = { 1:{compare:null,heatmap:null,segs:{},gestureSegs:{}}, 2:{compar
 let gestureChart = null;
 const segmentPunchlines = { 1:[], 2:[] };
 const punchlineCharts = { 1:null, 2:null };
+
+const segGestureMetrics = {};    // "vid_segIdx" → Set of selected metric keys
+let   globalGestureMetric = "arm_velocity";
+const _gestureDataByVid   = {};  // vid → gestureData (kept for chip re-renders)
+let   _lastGestureData    = null;
 const PART_COLORS = ["#f5e642","#ff6b35","#4fffb0","#a78bfa","#ef4444","#fbbf24","#3b82f6"];
+
+const ALL_METRICS = [
+  "shoulder_width","shoulder_height_diff","hip_width","torso_tilt",
+  "avg_elbow_distance","avg_arm_height","arm_spread","arm_velocity",
+  "body_center_velocity","hand_distance","hand_velocity",
+];
+const METRIC_LABELS = {
+  shoulder_width:       "Shoulder Width",
+  shoulder_height_diff: "Shoulder Tilt",
+  hip_width:            "Hip Width",
+  torso_tilt:           "Torso Tilt",
+  avg_elbow_distance:   "Elbow Dist",
+  avg_arm_height:       "Arm Height",
+  arm_spread:           "Arm Spread",
+  arm_velocity:         "Arm Velocity",
+  body_center_velocity: "Body Velocity",
+  hand_distance:        "Hand Dist",
+  hand_velocity:        "Hand Velocity",
+};
+const METRIC_COLORS = {
+  shoulder_width:       "#f5e642",
+  shoulder_height_diff: "#ff6b35",
+  hip_width:            "#4fffb0",
+  torso_tilt:           "#a78bfa",
+  avg_elbow_distance:   "#ef4444",
+  avg_arm_height:       "#fbbf24",
+  arm_spread:           "#3b82f6",
+  arm_velocity:         "#f472b6",
+  body_center_velocity: "#34d399",
+  hand_distance:        "#fb923c",
+  hand_velocity:        "#60a5fa",
+};
 
 const DEFAULTS = {
   1:[
@@ -167,7 +204,8 @@ function renderSegmentCards(vid,segs,winIdx,gestureData=null) {
           <tbody id="tbody-${vid}-${i}"></tbody></table>
         </div>
         <div class="gesture-segment-panel" style="margin-top:20px;padding-top:16px;border-top:1px solid #1a1a17">
-          <div style="font-size:0.72rem;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:10px">📊 Movement Metrics — <span style="color:#ff6b35">arm velocity</span> · <span style="color:#4fffb0">arm spread</span></div>
+          <div style="font-size:0.72rem;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:8px">📊 Movement Metrics</div>
+          <div class="gesture-metric-chips" id="gesture-chips-${vid}-${i}"></div>
           <canvas id="gesture-chart-${vid}-${i}" height="65"></canvas>
           <div id="gesture-chart-status-${vid}-${i}" style="font-size:0.7rem;color:#555;margin-top:4px;font-family:'DM Mono',monospace"></div>
         </div>
@@ -322,6 +360,35 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closePlModal
 
 // ── Per-segment gesture charts ───────────────────────────────────────────────
 
+function buildSegmentGestureChips(vid, segIdx) {
+  const container = document.getElementById(`gesture-chips-${vid}-${segIdx}`);
+  if (!container) return;
+  const key      = `${vid}_${segIdx}`;
+  const selected = segGestureMetrics[key] || new Set();
+  container.innerHTML = "";
+  ALL_METRICS.forEach(metric => {
+    const chip = document.createElement("span");
+    const isOn = selected.has(metric);
+    chip.className   = "gesture-chip" + (isOn ? " active" : "");
+    chip.textContent = METRIC_LABELS[metric];
+    if (isOn) {
+      chip.style.background   = METRIC_COLORS[metric];
+      chip.style.borderColor  = METRIC_COLORS[metric];
+      chip.style.color        = "#000";
+    }
+    chip.onclick = () => {
+      const sel = segGestureMetrics[`${vid}_${segIdx}`];
+      if (sel.has(metric)) {
+        if (sel.size > 1) sel.delete(metric);  // keep at least one selected
+      } else {
+        sel.add(metric);
+      }
+      renderSegmentGestureChart(vid, segIdx, _gestureDataByVid[vid]);
+    };
+    container.appendChild(chip);
+  });
+}
+
 function renderSegmentGestureChart(vid, segIdx, gestureData) {
   const canvas   = document.getElementById(`gesture-chart-${vid}-${segIdx}`);
   const statusEl = document.getElementById(`gesture-chart-status-${vid}-${segIdx}`);
@@ -335,36 +402,34 @@ function renderSegmentGestureChart(vid, segIdx, gestureData) {
     return;
   }
 
-  const key = `${vid}_${segIdx}`;
-  if (charts[vid].gestureSegs[key]) charts[vid].gestureSegs[key].destroy();
+  // Persist data so chip re-renders can call back here without re-fetching
+  _gestureDataByVid[vid] = gestureData;
 
+  // Initialise metric selection to arm_velocity + arm_spread on first call
+  const key = `${vid}_${segIdx}`;
+  if (!segGestureMetrics[key]) {
+    segGestureMetrics[key] = new Set(["arm_velocity", "arm_spread"]);
+  }
+
+  buildSegmentGestureChips(vid, segIdx);
+
+  const datasets = [...segGestureMetrics[key]].map(metric => ({
+    label:           METRIC_LABELS[metric],
+    data:            rows.map(r => ({ x: r.second, y: r[metric] ?? 0 })),
+    borderColor:     METRIC_COLORS[metric],
+    backgroundColor: "transparent",
+    tension: 0.3, pointRadius: 2, borderWidth: 1.5,
+  }));
+
+  if (charts[vid].gestureSegs[key]) charts[vid].gestureSegs[key].destroy();
   charts[vid].gestureSegs[key] = new Chart(canvas.getContext("2d"), {
     type: "line",
-    data: {
-      datasets: [
-        {
-          label: "Arm Velocity",
-          data: rows.map(r => ({ x: r.second, y: r.arm_velocity })),
-          borderColor: "#ff6b35",
-          backgroundColor: "transparent",
-          tension: 0.3, pointRadius: 2, borderWidth: 1.5,
-          yAxisID: "yVel",
-        },
-        {
-          label: "Arm Spread",
-          data: rows.map(r => ({ x: r.second, y: r.arm_spread })),
-          borderColor: "#4fffb0",
-          backgroundColor: "transparent",
-          tension: 0.3, pointRadius: 2, borderWidth: 1.5,
-          yAxisID: "ySpread",
-        },
-      ],
-    },
+    data: { datasets },
     options: {
       responsive: true,
       maintainAspectRatio: true,
       plugins: {
-        legend: { labels: { color: "#6b6a5e", font: { size: 10 }, boxWidth: 10 } },
+        legend: { display: false },
         tooltip: { callbacks: { title: items => `s = ${items[0]?.raw?.x}` } },
       },
       scales: {
@@ -373,19 +438,10 @@ function renderSegmentGestureChart(vid, segIdx, gestureData) {
           ticks: { color: "#6b6a5e", font: { size: 9 }, maxTicksLimit: 12 },
           grid: { color: "#1a1a17" },
         },
-        yVel: {
-          position: "left",
+        y: {
           beginAtZero: true,
-          ticks: { color: "#ff6b35", font: { size: 9 } },
+          ticks: { color: "#6b6a5e", font: { size: 9 } },
           grid: { color: "#1a1a17" },
-          title: { display: true, text: "vel", color: "#ff6b35", font: { size: 9 } },
-        },
-        ySpread: {
-          position: "right",
-          beginAtZero: true,
-          ticks: { color: "#4fffb0", font: { size: 9 } },
-          grid: { drawOnChartArea: false },
-          title: { display: true, text: "spread", color: "#4fffb0", font: { size: 9 } },
         },
       },
     },
@@ -394,33 +450,58 @@ function renderSegmentGestureChart(vid, segIdx, gestureData) {
 
 // ── Gesture Analysis Integration ─────────────────────────────────────────────
 
+function buildGlobalGestureChips() {
+  const container = document.getElementById("gesture-global-chips");
+  if (!container) return;
+  container.innerHTML = "";
+  ALL_METRICS.forEach(metric => {
+    const chip = document.createElement("span");
+    const isOn = metric === globalGestureMetric;
+    chip.className   = "gesture-chip" + (isOn ? " active" : "");
+    chip.textContent = METRIC_LABELS[metric];
+    if (isOn) {
+      chip.style.background  = METRIC_COLORS[metric];
+      chip.style.borderColor = METRIC_COLORS[metric];
+      chip.style.color       = "#000";
+    }
+    chip.onclick = () => {
+      globalGestureMetric = metric;
+      buildGlobalGestureChips();
+      if (_lastGestureData) renderGestureChart(_lastGestureData);
+    };
+    container.appendChild(chip);
+  });
+}
+
 async function loadGestureData() {
   const statusEl = document.getElementById("gesture-status");
   try {
     const resp = await fetch(`${API_BASE}/api/gesture/results`);
     if (!resp.ok) {
       statusEl.textContent = `⚠ Gesture data unavailable (${resp.status}) — run gestureanalysis pipeline first.`;
+      buildGlobalGestureChips();
       return;
     }
     const data = await resp.json();
+    buildGlobalGestureChips();
     renderGestureChart(data);
     const segCount = Object.keys(data.per_second_metrics || {}).length;
     statusEl.textContent = `Loaded ${segCount} segment(s) from gestureanalysis/results.json`;
   } catch(e) {
     statusEl.textContent = "⚠ Could not load gesture data: " + e.message;
+    buildGlobalGestureChips();
   }
 }
 
 function renderGestureChart(data) {
-  const metrics = data.per_second_metrics || {};
+  _lastGestureData = data;
+  const metrics  = data.per_second_metrics || {};
   const datasets = Object.entries(metrics).map(([segLabel, rows], i) => ({
-    label: segLabel,
-    data: rows.map(r => ({ x: r.second, y: r.arm_velocity })),
-    borderColor: PART_COLORS[i % PART_COLORS.length],
+    label:           segLabel,
+    data:            rows.map(r => ({ x: r.second, y: r[globalGestureMetric] ?? 0 })),
+    borderColor:     PART_COLORS[i % PART_COLORS.length],
     backgroundColor: "transparent",
-    tension: 0.3,
-    pointRadius: 3,
-    borderWidth: 2,
+    tension: 0.3, pointRadius: 3, borderWidth: 2,
   }));
 
   if (gestureChart) gestureChart.destroy();
@@ -436,8 +517,15 @@ function renderGestureChart(data) {
         tooltip: { callbacks: { title: items => `Second ${items[0]?.raw?.x ?? ""}` } },
       },
       scales: {
-        x: { type: "linear", title: { display: true, text: "Second", color: "#6b6a5e" }, ticks: { color: "#6b6a5e" }, grid: { color: "#1a1a17" } },
-        y: { title: { display: true, text: "Arm Velocity", color: "#6b6a5e" }, ticks: { color: "#6b6a5e" }, grid: { color: "#1a1a17" }, beginAtZero: true },
+        x: {
+          type: "linear",
+          title: { display: true, text: "Second", color: "#6b6a5e" },
+          ticks: { color: "#6b6a5e" }, grid: { color: "#1a1a17" },
+        },
+        y: {
+          title: { display: true, text: METRIC_LABELS[globalGestureMetric], color: "#6b6a5e" },
+          ticks: { color: "#6b6a5e" }, grid: { color: "#1a1a17" }, beginAtZero: true,
+        },
       },
     },
   });
