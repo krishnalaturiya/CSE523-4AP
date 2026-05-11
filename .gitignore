@@ -1,0 +1,27 @@
+# Python
+venv/
+CSE_524_AdvancedProject/envforaudio/
+gestureanalysis/mediapipe_env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+
+# Results & temp files
+results tmp/
+/tmp/
+*.wav
+*.mp3
+*.mp4
+*.csv
+*.json
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log
+
+# Project notes
+Update in code.txt
