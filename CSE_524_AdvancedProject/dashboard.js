@@ -101,7 +101,7 @@ function switchTab(n) {
   document.getElementById(`tab-btn-${n}`).classList.add("active");
 }
 
-window.addEventListener("DOMContentLoaded",()=>{ buildDefaultRows(1); buildDefaultRows(2); loadGestureData(); });
+window.addEventListener("DOMContentLoaded",()=>{ buildDefaultRows(1); buildDefaultRows(2); });
 
 // ── Analysis fetch ───────────────────────────────────────────────────────────
 
@@ -146,6 +146,13 @@ function renderAll(vid,data) {
   if(!window._lastSegData) window._lastSegData={};
   window._lastSegData[vid]={segs,winIdx};
   renderSegmentCards(vid,segs,winIdx,data.gesture||null);
+  if (data.gesture?.per_second_metrics) {
+    // Wait for all per-segment chart setTimeout(60ms) calls to complete before building the global view
+    setTimeout(() => {
+      buildGlobalGestureChips();
+      renderGestureChart(data.gesture);
+    }, 150);
+  }
   if(data.punchline_analysis?.length>0){
     const el=document.getElementById(`punchline-status-${vid}`); if(el) el.style.display="none";
     segmentPunchlines[vid]=data.punchline_analysis;
@@ -495,6 +502,11 @@ async function loadGestureData() {
 
 function renderGestureChart(data) {
   _lastGestureData = data;
+  // Reveal panel and sync title to the currently selected metric
+  const panel = document.getElementById("gesture-panel");
+  if (panel) panel.style.display = "block";
+  const labelEl = document.getElementById("gesture-panel-label");
+  if (labelEl) labelEl.textContent = `// Gesture Analysis — ${METRIC_LABELS[globalGestureMetric]}`;
   const metrics  = data.per_second_metrics || {};
   const datasets = Object.entries(metrics).map(([segLabel, rows], i) => ({
     label:           segLabel,
