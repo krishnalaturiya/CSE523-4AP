@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaughLab — Same Joke 5 Ways</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span class="mic">🎤</span> LaughLab</div>
+  <div class="badge">Same Joke — 5 Ways Analysis</div>
+</header>
+
+<div class="container">
+  <div class="hero">
+    <h1>DECODE THE<br><span>LAUGH</span></h1>
+    <p>// Segment-wise audience reaction intelligence · Whisper + YAMNet</p>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-btn-1" onclick="switchTab(1)">
+      <span class="tb-title">🎤 Video 1</span>
+      <span class="tb-sub">Dan Rosenberg — Cap despite good hair</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-2" onclick="switchTab(2)">
+      <span class="tb-title">🎤 Video 2</span>
+      <span class="tb-sub">Dan Rosenberg — Sean John Glasses</span>
+    </button>
+  </div>
+
+  <!-- ══ VIDEO 1 ══ -->
+  <div class="tab-panel active" id="panel-1">
+    <div class="input-card">
+      <div class="input-card-label">// YouTube URL — leave blank for default video</div>
+      <input class="url-input" type="text" id="url-input-1"
+        placeholder="Custom YouTube URL (optional) — default: WSx2gqeEyLE" />
+      <div class="seg-builder-title">// Segments — edit or add your own</div>
+      <div class="seg-row-header">
+        <span>Label</span><span>Start (seconds)</span><span>End (seconds)</span><span></span>
+      </div>
+      <div class="seg-rows" id="seg-rows-1"></div>
+      <button class="add-seg-btn" onclick="addSegRow(1)">+ Add Segment</button>
+      <div class="error-box" id="error-box-1"></div>
+      <button class="btn-analyze" id="analyze-btn-1" onclick="runAnalysis(1)">⚡ Analyze Video 1</button>
+    </div>
+    <div class="status-bar" id="status-bar-1">
+      <div class="spinner"></div>
+      <div class="status-text">
+        <strong id="status-title-1">Running segment analysis…</strong>
+        <span id="status-detail-1">Downloading audio, running Whisper + YAMNet. Takes 3–8 min on first run.</span>
+      </div>
+    </div>
+    <div id="results-1" style="display:none">
+      <div class="winner-banner" id="winner-banner-1">
+        <div class="winner-trophy">🏆</div>
+        <div class="winner-text"><h2 id="winner-label-1">—</h2><p>got the strongest audience reaction</p></div>
+        <div class="winner-stats">
+          <div class="winner-stat"><div class="val" id="winner-lpm-1">—</div><div class="lbl">Laughs / Min</div></div>
+          <div class="winner-stat"><div class="val" id="winner-coverage-1">—</div><div class="lbl">Coverage</div></div>
+          <div class="winner-stat"><div class="val" id="winner-score-1">—</div><div class="lbl">Score</div></div>
+        </div>
+      </div>
+      <div class="collapsible-section">
+        <div class="collapsible-header" onclick="toggleCollapsible('punchline-section-1', this)">
+          <span class="section-label" style="margin:0;flex:1">Punchline Analysis</span>
+          <span class="coll-toggle">▼</span>
+        </div>
+        <div class="collapsible-body" id="punchline-section-1" style="display:none">
+          <div class="punchline-card" style="margin-top:16px">
+            <div class="punchline-status" id="punchline-status-1">⏳ Punchline data loading…</div>
+            <canvas id="chart-punchlines-1" style="display:none"></canvas>
+            <div class="punchline-legend" id="punchline-legend-1"></div>
+            <div id="punchline-table-wrap-1"></div>
+          </div>
+        </div>
+      </div>
+      <div class="section-label">Performance Review — Each Part</div>
+      <div class="segments-grid" id="segments-grid-1"></div>
+      <div class="collapsible-section">
+        <div class="collapsible-header" onclick="toggleCollapsible('heatmap-wrap-1', this)">
+          <span class="section-label" style="margin:0;flex:1">Laugh Intensity Heatmaps — Overlaid</span>
+          <span class="coll-toggle">▼</span>
+        </div>
+        <div class="collapsible-body" id="heatmap-wrap-1" style="display:none">
+          <div class="chart-card" style="margin-top:16px"><canvas id="chart-heatmaps-1"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ VIDEO 2 ══ -->
+  <div class="tab-panel" id="panel-2">
+    <div class="input-card">
+      <div class="input-card-label">// YouTube URL — leave blank for default video</div>
+      <input class="url-input" type="text" id="url-input-2"
+        placeholder="Custom YouTube URL (optional) — default: faNCfJL9008" />
+      <div class="seg-builder-title">// Segments — edit or add your own</div>
+      <div class="seg-row-header">
+        <span>Label</span><span>Start (seconds)</span><span>End (seconds)</span><span></span>
+      </div>
+      <div class="seg-rows" id="seg-rows-2"></div>
+      <button class="add-seg-btn" onclick="addSegRow(2)">+ Add Segment</button>
+      <div class="error-box" id="error-box-2"></div>
+      <button class="btn-analyze" id="analyze-btn-2" onclick="runAnalysis(2)">⚡ Analyze Video 2</button>
+    </div>
+    <div class="status-bar" id="status-bar-2">
+      <div class="spinner"></div>
+      <div class="status-text">
+        <strong id="status-title-2">Running segment analysis…</strong>
+        <span id="status-detail-2">Downloading audio, running Whisper + YAMNet. Takes 3–8 min on first run.</span>
+      </div>
+    </div>
+    <div id="results-2" style="display:none">
+      <div class="winner-banner" id="winner-banner-2">
+        <div class="winner-trophy">🏆</div>
+        <div class="winner-text"><h2 id="winner-label-2">—</h2><p>got the strongest audience reaction</p></div>
+        <div class="winner-stats">
+          <div class="winner-stat"><div class="val" id="winner-lpm-2">—</div><div class="lbl">Laughs / Min</div></div>
+          <div class="winner-stat"><div class="val" id="winner-coverage-2">—</div><div class="lbl">Coverage</div></div>
+          <div class="winner-stat"><div class="val" id="winner-score-2">—</div><div class="lbl">Score</div></div>
+        </div>
+      </div>
+      <div class="collapsible-section">
+        <div class="collapsible-header" onclick="toggleCollapsible('punchline-section-2', this)">
+          <span class="section-label" style="margin:0;flex:1">Punchline Analysis</span>
+          <span class="coll-toggle">▼</span>
+        </div>
+        <div class="collapsible-body" id="punchline-section-2" style="display:none">
+          <div class="punchline-card" style="margin-top:16px">
+            <div class="punchline-status" id="punchline-status-2">⏳ Punchline data loading…</div>
+            <canvas id="chart-punchlines-2" style="display:none"></canvas>
+            <div class="punchline-legend" id="punchline-legend-2"></div>
+            <div id="punchline-table-wrap-2"></div>
+          </div>
+        </div>
+      </div>
+      <div class="section-label">Performance Review — Each Part</div>
+      <div class="segments-grid" id="segments-grid-2"></div>
+      <div class="collapsible-section">
+        <div class="collapsible-header" onclick="toggleCollapsible('heatmap-wrap-2', this)">
+          <span class="section-label" style="margin:0;flex:1">Laugh Intensity Heatmaps — Overlaid</span>
+          <span class="coll-toggle">▼</span>
+        </div>
+        <div class="collapsible-body" id="heatmap-wrap-2" style="display:none">
+          <div class="chart-card" style="margin-top:16px"><canvas id="chart-heatmaps-2"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GESTURE ANALYSIS ══ -->
+  <div id="gesture-panel" style="margin-top:40px;padding-bottom:48px">
+    <div class="section-label">// Gesture Analysis — Arm Velocity per Second</div>
+    <div class="chart-card" style="margin-top:12px">
+      <canvas id="chart-gesture" height="80"></canvas>
+    </div>
+    <div id="gesture-status" style="color:#6b6a5e;font-size:12px;margin-top:8px;font-family:'DM Mono',monospace">
+      Loading gesture data…
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Punchline clip modal ── -->
+<div class="pl-modal-overlay" id="plModal" onclick="closePlModal(event)">
+  <div class="pl-modal">
+    <div class="pl-modal-header">
+      <div>
+        <div class="pl-modal-title" id="plModalTitle">—</div>
+        <div class="pl-modal-sub" id="plModalSub">—</div>
+      </div>
+      <button class="pl-modal-close" onclick="closePlModalDirect()">×</button>
+    </div>
+    <div class="pl-modal-video">
+      <video id="plModalVideo" controls autoplay></video>
+    </div>
+    <div class="pl-modal-footer" id="plModalFooter">—</div>
+  </div>
+</div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>

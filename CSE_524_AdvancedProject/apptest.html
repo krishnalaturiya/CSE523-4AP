@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gesture Analysis Debugger</title>
+  <link rel="stylesheet" href="/apptest.css" />
+</head>
+<body>
+
+  <h1>Gesture Analysis Debugger</h1>
+  <p class="sub">
+    Runs the gesture subprocess exactly as <code>app.py</code> does and logs every step.
+    Check the server terminal for additional detail.
+  </p>
+
+  <button id="run-btn" onclick="startRun()">Run Gesture Analysis</button>
+  <div id="status"></div>
+
+  <div class="section-label">Live Log</div>
+  <div id="log-box">(press the button to start)</div>
+
+  <div class="section-label">Final JSON Response</div>
+  <div id="result-box"></div>
+
+  <script src="/apptest.js"></script>
+</body>
+</html>
